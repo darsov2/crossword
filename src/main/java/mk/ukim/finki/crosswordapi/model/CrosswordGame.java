@@ -14,7 +14,8 @@ public class CrosswordGame {
     private LocalDateTime startedAt;
     private LocalDateTime finishedAt;
     private Integer guessedWords;
-    //TODO: Add User relationship
+    @ManyToOne
+    private CrosswordUser crosswordUser;
     @ManyToOne
     private Crossword crossword;
 }
