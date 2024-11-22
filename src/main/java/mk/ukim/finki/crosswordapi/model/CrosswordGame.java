@@ -14,6 +14,7 @@ public class CrosswordGame {
     private LocalDateTime startedAt;
     private LocalDateTime finishedAt;
     private Integer guessedWords;
+    private Boolean showErrors;
     @ManyToOne
     private CrosswordUser crosswordUser;
     @ManyToOne

@@ -1,9 +1,6 @@
 package mk.ukim.finki.crosswordapi.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 import mk.ukim.finki.crosswordapi.model.enums.Difficulty;
 import org.springframework.data.annotation.CreatedDate;
@@ -16,6 +13,7 @@ import java.time.LocalDateTime;
 public class Crossword {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Integer height;
     private Integer width;
@@ -24,6 +22,6 @@ public class Crossword {
     private Difficulty difficulty;
     @CreatedDate
     private LocalDateTime dateCreated;
-    private Boolean active;
+    private Boolean active = true;
     private LocalDate dateAssigned;
 }
