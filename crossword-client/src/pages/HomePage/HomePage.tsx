@@ -2,6 +2,7 @@ import {Calendar, User, UserCircle2, History} from 'lucide-react';
 import {Card, CardContent} from '@/components/ui/card';
 import {Button} from '@/components/ui/button';
 import useGet from "@/hooks/useGet.ts";
+import {useNavigate} from "react-router-dom";
 
 const HomePage = () => {
     // This would typically come from your backend
@@ -11,7 +12,8 @@ const HomePage = () => {
         theme: "World Capitals"
     };
 
-    const {data, isLoading} = useGet('api/crossword/todays')
+    const {data, isLoading} = useGet('api/crossword/todays');
+    const navigate = useNavigate();
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
@@ -38,8 +40,7 @@ const HomePage = () => {
                         <div className="space-y-3">
                             <Button
                                 className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center"
-                                onClick={() => {/* Handle login */
-                                }}
+                                onClick={() => navigate("/login")}
                             >
                                 <UserCircle2 className="mr-2 h-5 w-5"/>
                                 Играј најавен
@@ -47,8 +48,7 @@ const HomePage = () => {
 
                             <Button
                                 className="w-full bg-gray-600 hover:bg-gray-700 text-white flex items-center justify-center"
-                                onClick={() => {/* Handle guest play */
-                                }}
+                                onClick={() => navigate("/todays")}
                             >
                                 <User className="mr-2 h-5 w-5"/>
                                 Играј како гостин
