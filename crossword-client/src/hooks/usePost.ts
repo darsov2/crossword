@@ -1,34 +1,26 @@
-import {useState, useEffect} from 'react';
+import { useState } from 'react';
 import axios from "@/axios.ts";
-import {UserResponse} from "@/interface/user-response.ts";
+import { UserResponse } from "@/interface/user-response.ts";
 
-const usePost = (url: string) => {
+const usePost = () => {
+    const [data, setData] = useState<UserResponse | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const [data, setData] = useState((null as UserResponse));
-    const [isLoading, setIsLoading] = useState(true);
-    const getData = async (url: string) => {
-        await axios.post(url, {maxRedirects: 0}).then((res) => {
-            setData(res.data);
-        }).catch((error) => {
-            console.log(error)
-        })
-            .finally(() => {
-                setIsLoading(false);
-            });
+    const createEntity = async (url: string, entity: any): Promise<UserResponse | null> => {
+        try {
+            setIsLoading(true);
+            const response = await axios.post(url, entity);
+            setData(response.data);
+            return response.data;
+        } catch (error) {
+            console.error('Error in usePost:', error);
+            return null;
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    useEffect(() => {
-        setIsLoading(true);
-        getData(url);
-    }, [url]);
-
-    return {
-        data,
-        setData,
-        isLoading,
-        getData
-    };
+    return { data, isLoading, createEntity };
 };
-
 
 export default usePost;
