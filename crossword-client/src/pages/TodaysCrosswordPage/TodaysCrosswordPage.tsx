@@ -15,129 +15,12 @@ const ArrowWordPuzzle = () => {
     const [lastClickedCell, setLastClickedCell] = useState(null);
     const {data, isLoading} = useGet<CrosswordGridResponse>('api/crossword/todays/grid');
     const [puzzleData, setPuzzleData] = useState([]);
-    // const [inputRefs, setInputRefs] = useState([]);
 
     const [grid, setGrid] = useState([]);
 
     let inputRefs = useRef(
         Array(8).fill(null).map(() => Array(8).fill(null))
     );
-    // let puzzleData = [
-    //     // First row - all clues pointing DOWN (except 0,0)
-    //     {
-    //         x: 1, y: 0,
-    //         clue: 'нјфдљ',
-    //         direction: 'down',
-    //         cells: [{x: 1, y: 1}, {x: 1, y: 2}, {x: 1, y: 3}, {x: 1, y: 4}, {x: 1, y: 5}, {x: 1, y: 6}, {x: 1, y: 7}]
-    //     },
-    //     {
-    //         x: 2, y: 0,
-    //         clue: 'на орелот мајката на орелот мајката',
-    //         direction: 'down',
-    //         cells: [{x: 2, y: 1}, {x: 2, y: 2}]
-    //     },
-    //     {
-    //         x: 3, y: 0,
-    //         clue: 'мајката мајка му',
-    //         direction: 'down',
-    //         cells: [{x: 3, y: 1}, {x: 3, y: 2}, {x: 3, y: 3}, {x: 3, y: 4}, {x: 3, y: 5}, {x: 3, y: 6}, {x: 3, y: 7}]
-    //     },
-    //     {
-    //         x: 4, y: 0,
-    //         clue: 'ехее',
-    //         direction: 'down',
-    //         cells: [{x: 4, y: 1}]
-    //     },
-    //     {
-    //         x: 5, y: 0,
-    //         clue: 'њњељ',
-    //         direction: 'down',
-    //         cells: [{x: 5, y: 1}, {x: 5, y: 2}, {x: 5, y: 3}, {x: 5, y: 4}, {x: 5, y: 5}, {x: 5, y: 6}, {x: 5, y: 7}]
-    //     },
-    //     {
-    //         x: 6, y: 0,
-    //         clue: 'лфлд',
-    //         direction: 'down',
-    //         cells: [{x: 6, y: 1}, {x: 6, y: 2}, {x: 6, y: 3}, {x: 6, y: 4}, {x: 6, y: 5}, {x: 6, y: 6}, {x: 6, y: 7}]
-    //     },
-    //     {
-    //         x: 7, y: 0,
-    //         clue: 'дсфд надоле надоле',
-    //         direction: 'down',
-    //         cells: [{x: 7, y: 1}, {x: 7, y: 2}, {x: 7, y: 3}, {x: 7, y: 4}, {x: 7, y: 5}, {x: 7, y: 6}, {x: 7, y: 7}]
-    //     },
-    //
-    //     // First column - all clues pointing RIGHT (except 0,0)
-    //     {
-    //         x: 0, y: 1,
-    //         clue: 'Десно 1',
-    //         direction: 'right',
-    //         cells: [{x: 1, y: 1}, {x: 2, y: 1}, {x: 3, y: 1}, {x: 4, y: 1}, {x: 5, y: 1}, {x: 6, y: 1}, {x: 7, y: 1}]
-    //     },
-    //     {
-    //         x: 0, y: 2,
-    //         clue: 'Десно 2',
-    //         direction: 'right',
-    //         cells: [{x: 1, y: 2}, {x: 2, y: 2}, {x: 3, y: 2}]
-    //     },
-    //     {
-    //         x: 0, y: 3,
-    //         clue: 'Десно 3',
-    //         direction: 'right',
-    //         cells: [{x: 1, y: 3}]
-    //     },
-    //     {
-    //         x: 0, y: 4,
-    //         clue: 'Десно 4',
-    //         direction: 'right',
-    //         cells: [{x: 1, y: 4}, {x: 2, y: 4}, {x: 3, y: 4}, {x: 4, y: 4}, {x: 5, y: 4}, {x: 6, y: 4}, {x: 7, y: 4}]
-    //     },
-    //     {
-    //         x: 0, y: 5,
-    //         clue: 'Десно 5',
-    //         direction: 'right',
-    //         cells: [{x: 1, y: 5}, {x: 2, y: 5}, {x: 3, y: 5}, {x: 4, y: 5}, {x: 5, y: 5}, {x: 6, y: 5}, {x: 7, y: 5}]
-    //     },
-    //     {
-    //         x: 0, y: 6,
-    //         clue: 'Десно 6',
-    //         direction: 'right',
-    //         cells: [{x: 1, y: 6}, {x: 2, y: 6}, {x: 3, y: 6}, {x: 4, y: 6}, {x: 5, y: 6}, {x: 6, y: 6}, {x: 7, y: 6}]
-    //     },
-    //     {
-    //         x: 0, y: 7,
-    //         clue: 'Десно 7',
-    //         direction: 'right',
-    //         cells: [{x: 1, y: 7}, {x: 2, y: 7}, {x: 3, y: 7}, {x: 4, y: 7}, {x: 5, y: 7}, {x: 6, y: 7}, {x: 7, y: 7}]
-    //     },
-    //
-    //     // Additional clues in the grid
-    //     {
-    //         x: 2, y: 3,
-    //         clue: 'Срердеее',
-    //         direction: 'right',
-    //         cells: [{x: 3, y: 3}, {x: 4, y: 3}, {x: 5, y: 3}, {x: 6, y: 3}, {x: 7, y: 3}]
-    //     },
-    //     {
-    //         x: 2, y: 3,
-    //         clue: 'аха',
-    //         direction: 'down',
-    //         cells: [{x: 2, y: 4}, {x: 2, y: 5}, {x: 2, y: 6}, {x: 2, y: 7}]
-    //     },
-    //     {
-    //         x: 4, y: 2,
-    //         clue: 'ахаа',
-    //         direction: 'right',
-    //         cells: [{x: 5, y: 2}, {x: 6, y: 2}, {x: 7, y: 2}]
-    //     },
-    //     {
-    //         x: 4, y: 2,
-    //         clue: 'ухуу',
-    //         direction: 'down',
-    //         cells: [{x: 4, y: 3}, {x: 4, y: 4}, {x: 4, y: 5}, {x: 4, y: 6}, {x: 4, y: 7}]
-    //     },
-    //     // Add more internal clues as needed
-    // ];
 
     const englishToMacedonian = {
         'a': 'А', 'b': 'Б', 'v': 'В', 'g': 'Г', 'd': 'Д', 'e': 'Е', 'z': 'З',
