@@ -14,7 +14,13 @@ import java.util.List;
 @NamedEntityGraph(
         name = "crosswordWithWords",
         attributeNodes = {
-                @NamedAttributeNode("words"),
+                @NamedAttributeNode(value = "words", subgraph = "wordsOfWordInCrossword")
+        },
+        subgraphs = {
+                @NamedSubgraph(
+                        name = "wordsOfWordInCrossword",
+                        attributeNodes = @NamedAttributeNode("word")
+                )
         }
 )
 public class Crossword {
