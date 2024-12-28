@@ -57,8 +57,7 @@ const HomePage = () => {
                             <Button
                                 variant="outline"
                                 className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 flex items-center justify-center"
-                                onClick={() => {/* Handle previous puzzles */
-                                }}
+                                onClick={() => navigate("/previous")}
                             >
                                 <History className="mr-2 h-5 w-5"/>
                                 Крстозбори од претходни денови
