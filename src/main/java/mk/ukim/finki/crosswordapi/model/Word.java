@@ -16,4 +16,5 @@ public class Word {
     private String word;
     private Integer length;
     private Rarity rarity;
+    private String definition;
 }

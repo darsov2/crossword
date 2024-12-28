@@ -7,9 +7,16 @@ import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
+@NamedEntityGraph(
+        name = "crosswordWithWords",
+        attributeNodes = {
+                @NamedAttributeNode("words"),
+        }
+)
 public class Crossword {
 
     @Id
@@ -24,4 +31,6 @@ public class Crossword {
     private LocalDateTime dateCreated;
     private Boolean active = true;
     private LocalDate dateAssigned;
+    @OneToMany(mappedBy = "crossword")
+    List<WordInCrossword> words;
 }

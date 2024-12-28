@@ -1,7 +1,7 @@
 package mk.ukim.finki.crosswordapi.web.api;
 
-import mk.ukim.finki.crosswordapi.service.CrosswordService;
 import mk.ukim.finki.crosswordapi.web.mapper.CrosswordMapper;
+import mk.ukim.finki.crosswordapi.web.response.CrosswordGridResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,5 +21,10 @@ public class CrosswordController {
     @GetMapping("todays")
     public ResponseEntity<?> getTodaysCrossword() {
         return ResponseEntity.ok(crosswordMapper.getTodaysCrossword());
+    }
+
+    @GetMapping(value = "/todays/grid", produces = "application/json")
+    public ResponseEntity<?> getTodaysCrosswordGrid() {
+        return ResponseEntity.ok(crosswordMapper.getTodaysCrosswordGrid());
     }
 }

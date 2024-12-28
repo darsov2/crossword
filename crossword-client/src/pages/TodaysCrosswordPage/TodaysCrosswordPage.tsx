@@ -1,137 +1,143 @@
 import React, {useState, useRef, useEffect} from 'react';
 import {Button} from '@/components/ui/button';
 import {Card} from '@/components/ui/card';
+import ClueDisplay from "@/components/CrosswordGrid/ClueDisplay.tsx";
+import SplitClueCell from "@/components/CrosswordGrid/SplitClueCell.tsx";
+import OnScreenKeyboard from "@/components/CrosswordGrid/OnScreenKeyboard.tsx";
+import SingleClueCell from "@/components/CrosswordGrid/SingleClueCell.tsx";
+import useGet from "@/hooks/useGet.ts";
+import {CrosswordGridResponse} from "@/interface/crossword-grid-response.interface.ts";
 
 const ArrowWordPuzzle = () => {
     const [selectedCell, setSelectedCell] = useState(null);
     const [activeDirection, setActiveDirection] = useState('right');
     const [activeClue, setActiveClue] = useState(null);
     const [lastClickedCell, setLastClickedCell] = useState(null);
-    const [grid, setGrid] = useState(Array(8).fill().map(() => Array(8).fill({
-        value: '',
-        isClue: false
-    })));
+    const {data, isLoading} = useGet<CrosswordGridResponse>('api/crossword/todays/grid');
+    const [puzzleData, setPuzzleData] = useState([]);
+    // const [inputRefs, setInputRefs] = useState([]);
 
-    const inputRefs = useRef(
-        Array(8).fill().map(() => Array(8).fill(null))
+    const [grid, setGrid] = useState([]);
+
+    let inputRefs = useRef(
+        Array(8).fill(null).map(() => Array(8).fill(null))
     );
-
-    const puzzleData = [
-        // First row - all clues pointing DOWN (except 0,0)
-        {
-            x: 1, y: 0,
-            clue: 'нјфдљ',
-            direction: 'down',
-            cells: [{x: 1, y: 1}, {x: 1, y: 2}, {x: 1, y: 3}, {x: 1, y: 4}, {x: 1, y: 5}, {x: 1, y: 6}, {x: 1, y: 7}]
-        },
-        {
-            x: 2, y: 0,
-            clue: 'на орелот мајката',
-            direction: 'down',
-            cells: [{x: 2, y: 1}, {x: 2, y: 2}]
-        },
-        {
-            x: 3, y: 0,
-            clue: 'мајката мајка му',
-            direction: 'down',
-            cells: [{x: 3, y: 1}, {x: 3, y: 2}, {x: 3, y: 3}, {x: 3, y: 4}, {x: 3, y: 5}, {x: 3, y: 6}, {x: 3, y: 7}]
-        },
-        {
-            x: 4, y: 0,
-            clue: 'ехее',
-            direction: 'down',
-            cells: [{x: 4, y: 1}]
-        },
-        {
-            x: 5, y: 0,
-            clue: 'њњељ',
-            direction: 'down',
-            cells: [{x: 5, y: 1}, {x: 5, y: 2}, {x: 5, y: 3}, {x: 5, y: 4}, {x: 5, y: 5}, {x: 5, y: 6}, {x: 5, y: 7}]
-        },
-        {
-            x: 6, y: 0,
-            clue: 'лфлд',
-            direction: 'down',
-            cells: [{x: 6, y: 1}, {x: 6, y: 2}, {x: 6, y: 3}, {x: 6, y: 4}, {x: 6, y: 5}, {x: 6, y: 6}, {x: 6, y: 7}]
-        },
-        {
-            x: 7, y: 0,
-            clue: 'дсфд надоле надоле',
-            direction: 'down',
-            cells: [{x: 7, y: 1}, {x: 7, y: 2}, {x: 7, y: 3}, {x: 7, y: 4}, {x: 7, y: 5}, {x: 7, y: 6}, {x: 7, y: 7}]
-        },
-
-        // First column - all clues pointing RIGHT (except 0,0)
-        {
-            x: 0, y: 1,
-            clue: 'Десно 1',
-            direction: 'right',
-            cells: [{x: 1, y: 1}, {x: 2, y: 1}, {x: 3, y: 1}, {x: 4, y: 1}, {x: 5, y: 1}, {x: 6, y: 1}, {x: 7, y: 1}]
-        },
-        {
-            x: 0, y: 2,
-            clue: 'Десно 2',
-            direction: 'right',
-            cells: [{x: 1, y: 2}, {x: 2, y: 2}, {x: 3, y: 2}]
-        },
-        {
-            x: 0, y: 3,
-            clue: 'Десно 3',
-            direction: 'right',
-            cells: [{x: 1, y: 3}]
-        },
-        {
-            x: 0, y: 4,
-            clue: 'Десно 4',
-            direction: 'right',
-            cells: [{x: 1, y: 4}, {x: 2, y: 4}, {x: 3, y: 4}, {x: 4, y: 4}, {x: 5, y: 4}, {x: 6, y: 4}, {x: 7, y: 4}]
-        },
-        {
-            x: 0, y: 5,
-            clue: 'Десно 5',
-            direction: 'right',
-            cells: [{x: 1, y: 5}, {x: 2, y: 5}, {x: 3, y: 5}, {x: 4, y: 5}, {x: 5, y: 5}, {x: 6, y: 5}, {x: 7, y: 5}]
-        },
-        {
-            x: 0, y: 6,
-            clue: 'Десно 6',
-            direction: 'right',
-            cells: [{x: 1, y: 6}, {x: 2, y: 6}, {x: 3, y: 6}, {x: 4, y: 6}, {x: 5, y: 6}, {x: 6, y: 6}, {x: 7, y: 6}]
-        },
-        {
-            x: 0, y: 7,
-            clue: 'Десно 7',
-            direction: 'right',
-            cells: [{x: 1, y: 7}, {x: 2, y: 7}, {x: 3, y: 7}, {x: 4, y: 7}, {x: 5, y: 7}, {x: 6, y: 7}, {x: 7, y: 7}]
-        },
-
-        // Additional clues in the grid
-        {
-            x: 2, y: 3,
-            clue: 'Срердеее',
-            direction: 'right',
-            cells: [{x: 3, y: 3}, {x: 4, y: 3}, {x: 5, y: 3}, {x: 6, y: 3}, {x: 7, y: 3}]
-        },
-        {
-            x: 2, y: 3,
-            clue: 'аха',
-            direction: 'down',
-            cells: [{x: 2, y: 4}, {x: 2, y: 5}, {x: 2, y: 6}, {x: 2, y: 7}]
-        },
-        {
-            x: 4, y: 2,
-            clue: 'ахаа',
-            direction: 'right',
-            cells: [{x: 5, y: 2}, {x: 6, y: 2}, {x: 7, y: 2}]
-        },
-        {
-            x: 4, y: 2,
-            clue: 'ухуу',
-            direction: 'down',
-            cells: [{x: 4, y: 3}, {x: 4, y: 4}, {x: 4, y: 5}, {x: 4, y: 6}, {x: 4, y: 7}]
-        },
-        // Add more internal clues as needed
-    ];
+    // let puzzleData = [
+    //     // First row - all clues pointing DOWN (except 0,0)
+    //     {
+    //         x: 1, y: 0,
+    //         clue: 'нјфдљ',
+    //         direction: 'down',
+    //         cells: [{x: 1, y: 1}, {x: 1, y: 2}, {x: 1, y: 3}, {x: 1, y: 4}, {x: 1, y: 5}, {x: 1, y: 6}, {x: 1, y: 7}]
+    //     },
+    //     {
+    //         x: 2, y: 0,
+    //         clue: 'на орелот мајката на орелот мајката',
+    //         direction: 'down',
+    //         cells: [{x: 2, y: 1}, {x: 2, y: 2}]
+    //     },
+    //     {
+    //         x: 3, y: 0,
+    //         clue: 'мајката мајка му',
+    //         direction: 'down',
+    //         cells: [{x: 3, y: 1}, {x: 3, y: 2}, {x: 3, y: 3}, {x: 3, y: 4}, {x: 3, y: 5}, {x: 3, y: 6}, {x: 3, y: 7}]
+    //     },
+    //     {
+    //         x: 4, y: 0,
+    //         clue: 'ехее',
+    //         direction: 'down',
+    //         cells: [{x: 4, y: 1}]
+    //     },
+    //     {
+    //         x: 5, y: 0,
+    //         clue: 'њњељ',
+    //         direction: 'down',
+    //         cells: [{x: 5, y: 1}, {x: 5, y: 2}, {x: 5, y: 3}, {x: 5, y: 4}, {x: 5, y: 5}, {x: 5, y: 6}, {x: 5, y: 7}]
+    //     },
+    //     {
+    //         x: 6, y: 0,
+    //         clue: 'лфлд',
+    //         direction: 'down',
+    //         cells: [{x: 6, y: 1}, {x: 6, y: 2}, {x: 6, y: 3}, {x: 6, y: 4}, {x: 6, y: 5}, {x: 6, y: 6}, {x: 6, y: 7}]
+    //     },
+    //     {
+    //         x: 7, y: 0,
+    //         clue: 'дсфд надоле надоле',
+    //         direction: 'down',
+    //         cells: [{x: 7, y: 1}, {x: 7, y: 2}, {x: 7, y: 3}, {x: 7, y: 4}, {x: 7, y: 5}, {x: 7, y: 6}, {x: 7, y: 7}]
+    //     },
+    //
+    //     // First column - all clues pointing RIGHT (except 0,0)
+    //     {
+    //         x: 0, y: 1,
+    //         clue: 'Десно 1',
+    //         direction: 'right',
+    //         cells: [{x: 1, y: 1}, {x: 2, y: 1}, {x: 3, y: 1}, {x: 4, y: 1}, {x: 5, y: 1}, {x: 6, y: 1}, {x: 7, y: 1}]
+    //     },
+    //     {
+    //         x: 0, y: 2,
+    //         clue: 'Десно 2',
+    //         direction: 'right',
+    //         cells: [{x: 1, y: 2}, {x: 2, y: 2}, {x: 3, y: 2}]
+    //     },
+    //     {
+    //         x: 0, y: 3,
+    //         clue: 'Десно 3',
+    //         direction: 'right',
+    //         cells: [{x: 1, y: 3}]
+    //     },
+    //     {
+    //         x: 0, y: 4,
+    //         clue: 'Десно 4',
+    //         direction: 'right',
+    //         cells: [{x: 1, y: 4}, {x: 2, y: 4}, {x: 3, y: 4}, {x: 4, y: 4}, {x: 5, y: 4}, {x: 6, y: 4}, {x: 7, y: 4}]
+    //     },
+    //     {
+    //         x: 0, y: 5,
+    //         clue: 'Десно 5',
+    //         direction: 'right',
+    //         cells: [{x: 1, y: 5}, {x: 2, y: 5}, {x: 3, y: 5}, {x: 4, y: 5}, {x: 5, y: 5}, {x: 6, y: 5}, {x: 7, y: 5}]
+    //     },
+    //     {
+    //         x: 0, y: 6,
+    //         clue: 'Десно 6',
+    //         direction: 'right',
+    //         cells: [{x: 1, y: 6}, {x: 2, y: 6}, {x: 3, y: 6}, {x: 4, y: 6}, {x: 5, y: 6}, {x: 6, y: 6}, {x: 7, y: 6}]
+    //     },
+    //     {
+    //         x: 0, y: 7,
+    //         clue: 'Десно 7',
+    //         direction: 'right',
+    //         cells: [{x: 1, y: 7}, {x: 2, y: 7}, {x: 3, y: 7}, {x: 4, y: 7}, {x: 5, y: 7}, {x: 6, y: 7}, {x: 7, y: 7}]
+    //     },
+    //
+    //     // Additional clues in the grid
+    //     {
+    //         x: 2, y: 3,
+    //         clue: 'Срердеее',
+    //         direction: 'right',
+    //         cells: [{x: 3, y: 3}, {x: 4, y: 3}, {x: 5, y: 3}, {x: 6, y: 3}, {x: 7, y: 3}]
+    //     },
+    //     {
+    //         x: 2, y: 3,
+    //         clue: 'аха',
+    //         direction: 'down',
+    //         cells: [{x: 2, y: 4}, {x: 2, y: 5}, {x: 2, y: 6}, {x: 2, y: 7}]
+    //     },
+    //     {
+    //         x: 4, y: 2,
+    //         clue: 'ахаа',
+    //         direction: 'right',
+    //         cells: [{x: 5, y: 2}, {x: 6, y: 2}, {x: 7, y: 2}]
+    //     },
+    //     {
+    //         x: 4, y: 2,
+    //         clue: 'ухуу',
+    //         direction: 'down',
+    //         cells: [{x: 4, y: 3}, {x: 4, y: 4}, {x: 4, y: 5}, {x: 4, y: 6}, {x: 4, y: 7}]
+    //     },
+    //     // Add more internal clues as needed
+    // ];
 
     const englishToMacedonian = {
         'a': 'А', 'b': 'Б', 'v': 'В', 'g': 'Г', 'd': 'Д', 'e': 'Е', 'z': 'З',
@@ -140,6 +146,30 @@ const ArrowWordPuzzle = () => {
         'c': 'Ц', 'q': 'Љ', 'w': 'Њ', 'x': 'Џ', 'y': 'Ѕ', '[': 'Ш', ']': 'Ѓ',
         ';': 'Ч', '\'': 'Ќ', '\\': 'Ж'
     };
+
+    useEffect(() => {
+        if (!isLoading) {
+            if (data != null) {
+                console.log(data)
+                setPuzzleData(() => {
+                    console.log(data);
+                    return data.wordPlacements;
+                });
+                inputRefs.current = Array(data?.height || 8).fill(null)
+                    .map(() => Array(data?.width || 8).fill(null));
+
+                console.log("SET GRID", Array(data.height).fill().map(() => Array(data.width).fill({
+                    value: '',
+                    isClue: false
+                })))
+
+                setGrid(Array(data.height).fill().map(() => Array(data.width).fill({
+                    value: '',
+                    isClue: false
+                })))
+            }
+        }
+    }, [isLoading]);
 
     useEffect(() => {
         if (selectedCell) {
@@ -171,30 +201,6 @@ const ArrowWordPuzzle = () => {
 
         return {rightClue, downClue};
     };
-
-    const SplitClueCell = ({rightClue, downClue}) => (
-        <div className="w-full h-full relative">
-            <div className="absolute left-0 top-0 w-full h-[50%] border-b border-gray-300"/>
-
-            <div
-                className="absolute top-0 left-0 w-full h-[50%] flex items-center justify-center p-1 cursor-pointer hover:bg-gray-200"
-                onClick={() => handleClueClick(rightClue)}
-            >
-                <div className="text-xs text-center leading-none">
-                    {rightClue.clue}
-                </div>
-            </div>
-
-            <div
-                className="absolute bottom-0 left-0 w-full h-[50%] flex items-center justify-center p-1 cursor-pointer hover:bg-gray-200"
-                onClick={() => handleClueClick(downClue)}
-            >
-                <div className="text-xs text-center leading-none">
-                    {downClue.clue}
-                </div>
-            </div>
-        </div>
-    );
 
     const findNextCell = (currentX, currentY, direction) => {
         const currentWord = puzzleData.find(word =>
@@ -243,7 +249,6 @@ const ArrowWordPuzzle = () => {
     };
 
     const handleClueClick = (clue) => {
-        // Find the first cell of this word
         const firstCell = clue.cells[0];
         if (firstCell) {
             setActiveDirection(clue.direction);
@@ -272,7 +277,6 @@ const ArrowWordPuzzle = () => {
             let nextCell = null;
 
             if (direction === 'left') {
-                // Find the previous cell in the current word
                 const currentWord = puzzleData.find(word =>
                     word.direction === 'right' &&
                     word.cells.some(cell => cell.x === col && cell.y === row)
@@ -346,165 +350,134 @@ const ArrowWordPuzzle = () => {
         }
     };
 
-    return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4">
-            <div className="w-auto mx-auto space-y-4">
-                <div className="flex justify-center">
-                    <h1 className="text-2xl font-bold">Денешен крстозбор</h1>
-                </div>
+    return (!isLoading && data != null && grid.length != 0 && (
+            <div className="flex flex-col items-center justify-center min-h-screen p-4">
+                <div className="w-auto mx-auto space-y-4">
+                    <div className="flex justify-center">
+                        <h1 className="text-2xl font-bold">Денешен крстозбор</h1>
+                    </div>
 
-                <Card className="p-4 text-center min-h-[60px] flex items-center justify-center mb-4">
-                    {activeClue ? (
-                        <div>
-                            <span className="font-bold">{activeClue.clue}</span>
-                            <span className="ml-2 text-gray-500">
-                ({activeClue.direction === 'right' ? 'надесно' : 'надолу'})
-              </span>
-                        </div>
-                    ) : (
-                        <div className="text-gray-500">Click a cell to start</div>
-                    )}
-                </Card>
+                    <Card className="p-4 text-center min-h-[60px] flex items-center justify-center mb-4">
+                        <ClueDisplay activeClue={activeClue}></ClueDisplay>
+                    </Card>
 
-                <div className="flex flex-col items-center gap-4">
-                    <div className="inline-block border border-gray-300">
-                        {Array(8).fill().map((_, rowIndex) => (
-                            <div key={rowIndex} className="flex">
-                                {Array(8).fill().map((_, colIndex) => {
-                                    const {rightClue, downClue} = findCluesForCell(colIndex, rowIndex);
-                                    const hasIntersectingClues = rightClue && downClue;
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="inline-block border border-gray-300">
+                            {Array(data?.height).fill(null).map((_, rowIndex) => (
+                                <div key={rowIndex} className="flex">
+                                    {Array(data?.width).fill(null).map((_, colIndex) => {
+                                        const {rightClue, downClue} = findCluesForCell(colIndex, rowIndex);
+                                        const hasIntersectingClues = rightClue && downClue;
 
-                                    const isSelected = selectedCell &&
-                                        selectedCell[0] === rowIndex &&
-                                        selectedCell[1] === colIndex;
+                                        const isSelected = selectedCell &&
+                                            selectedCell[0] === rowIndex &&
+                                            selectedCell[1] === colIndex;
 
-                                    const isPartOfWord = puzzleData.some(word =>
-                                        word.cells.some(cell => cell.x === colIndex && cell.y === rowIndex) ||
-                                        (word.x === colIndex && word.y === rowIndex)
-                                    );
+                                        const isPartOfWord = puzzleData.some(word =>
+                                            word.cells.some(cell => cell.x === colIndex && cell.y === rowIndex) ||
+                                            (word.x === colIndex && word.y === rowIndex)
+                                        );
 
-                                    return (
-                                        <div
-                                            key={`${rowIndex}-${colIndex}`}
-                                            className={`
+                                        const isLastOfWord = puzzleData.find(word => {
+                                            const lastChar = word.cells[word.cells.length - 1];
+                                            return lastChar.x == colIndex && lastChar.y == rowIndex;
+                                        })
+
+
+                                        return (
+                                            <div
+                                                key={`${rowIndex}-${colIndex}`}
+                                                className={`
                                               w-14 h-14 border border-gray-300
                                               flex flex-col items-center justify-center
                                               relative overflow-hidden
                                               ${rightClue || downClue ? 'bg-gray-100' : 'bg-white'}
                                               ${isSelected ? 'border-2 border-blue-500' : ''}
-                                              ${!isPartOfWord ? 'bg-gray-200' : ''}
+                                              ${!isPartOfWord ? 'bg-gray-80' : ''}
                                             `}
-                                            onClick={() => {
-                                                if (isPartOfWord && !rightClue && !downClue) {
-                                                    selectCell(rowIndex, colIndex, true);
-                                                }
-                                            }}
-                                        >
-                                            {hasIntersectingClues ? (
-                                                <SplitClueCell rightClue={rightClue} downClue={downClue}/>
-                                            ) : rightClue || downClue ? (
-                                                <div
-                                                    className="text-xs text-center leading-tight px-1 cursor-pointer hover:bg-gray-200 w-full h-full flex items-center justify-center"
-                                                    onClick={() => handleClueClick(rightClue || downClue)}
-                                                >
-                                                    {(rightClue || downClue).clue}
-                                                </div>
-                                            ) : (
-                                                <input
-                                                    ref={el => {
-                                                        inputRefs.current[rowIndex][colIndex] = {
-                                                            current: el
-                                                        };
-                                                    }}
-                                                    type="text"
-                                                    maxLength="1"
-                                                    className="w-full h-full text-center text-xl font-bold bg-transparent outline-none cursor-pointer caret-transparent"
-                                                    value={grid[rowIndex][colIndex].value}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key.length === 1) {
-                                                            e.preventDefault();
-                                                            // Check if it's direct Macedonian input
-                                                            if (/[А-ШЃЖЅЈЉЊЌЏа-шѓжѕјљњќџ]/.test(e.key)) {
-                                                                handleCellInput(rowIndex, colIndex, e.key.toUpperCase());
-                                                            }
-                                                            // Check if it's English input that can be mapped (now including ; and ')
-                                                            else if (/[a-zA-Z\[\]\\;']/.test(e.key)) {
-                                                                const macedonianLetter = englishToMacedonian[e.key.toLowerCase()];
-                                                                if (macedonianLetter) {
-                                                                    handleCellInput(rowIndex, colIndex, macedonianLetter);
-                                                                }
-                                                            }
-                                                        } else if (e.key === 'Backspace') {
-                                                            e.preventDefault();
-                                                            const newGrid = [...grid];
-                                                            newGrid[rowIndex][colIndex] = {
-                                                                ...newGrid[rowIndex][colIndex],
-                                                                value: ''
+                                                onClick={() => {
+                                                    if (isPartOfWord && !rightClue && !downClue) {
+                                                        selectCell(rowIndex, colIndex, true);
+                                                    }
+                                                }}
+                                            >
+                                                {hasIntersectingClues ? (
+                                                    <SplitClueCell rightClue={rightClue} downClue={downClue}
+                                                                   handleClueClick={handleClueClick}/>
+                                                ) : rightClue || downClue ? (
+                                                    <SingleClueCell clue={rightClue || downClue}
+                                                                    handleClueClick={handleClueClick}/>
+                                                ) : (
+                                                    <input
+                                                        ref={el => {
+                                                            inputRefs.current[rowIndex][colIndex] = {
+                                                                current: el
                                                             };
-                                                            setGrid(newGrid);
-
-                                                            if (!grid[rowIndex][colIndex].value) {
-                                                                const words = findWordsForCell(colIndex, rowIndex);
-                                                                const currentWord = words.find(word => word.direction === activeDirection);
-
-                                                                if (currentWord) {
-                                                                    const currentCellIndex = currentWord.cells.findIndex(
-                                                                        cell => cell.x === colIndex && cell.y === rowIndex
-                                                                    );
-
-                                                                    if (currentCellIndex > 0) {
-                                                                        const prevCell = currentWord.cells[currentCellIndex - 1];
-                                                                        selectCell(prevCell.y, prevCell.x);
+                                                        }}
+                                                        disabled={rowIndex == 0 && colIndex == 0}
+                                                        type="text"
+                                                        maxLength="1"
+                                                        className="w-full h-full text-center text-xl font-bold bg-transparent outline-none cursor-pointer caret-transparent"
+                                                        value={grid[rowIndex][colIndex].value}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key.length === 1) {
+                                                                e.preventDefault();
+                                                                if (/[А-ШЃЖЅЈЉЊЌЏа-шѓжѕјљњќџ]/.test(e.key)) {
+                                                                    handleCellInput(rowIndex, colIndex, e.key.toUpperCase());
+                                                                } else if (/[a-zA-Z\[\]\\;']/.test(e.key)) {
+                                                                    const macedonianLetter = englishToMacedonian[e.key.toLowerCase()];
+                                                                    if (macedonianLetter) {
+                                                                        handleCellInput(rowIndex, colIndex, macedonianLetter);
                                                                     }
                                                                 }
-                                                            }
-                                                        } else {
-                                                            handleKeyDown(e, rowIndex, colIndex);
-                                                        }
-                                                    }}
-                                                    onChange={() => {
-                                                    }}
-                                                    onFocus={() => selectCell(rowIndex, colIndex)}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        selectCell(rowIndex, colIndex, true);
-                                                    }}
-                                                />
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ))}
-                    </div>
+                                                            } else if (e.key === 'Backspace') {
+                                                                e.preventDefault();
+                                                                const newGrid = [...grid];
+                                                                newGrid[rowIndex][colIndex] = {
+                                                                    ...newGrid[rowIndex][colIndex],
+                                                                    value: ''
+                                                                };
+                                                                setGrid(newGrid);
 
-                    <div className="inline-block space-y-2 mt-4">
-                        {[
-                            ['Љ', 'Њ', 'Е', 'Р', 'Т', 'Ѕ', 'У', 'И', 'О', 'П', 'Ш', 'Ѓ', 'Ж'],
-                            ['А', 'С', 'Д', 'Ф', 'Г', 'Х', 'Ј', 'К', 'Л', 'Ч', 'Ќ'],
-                            ['З', 'Џ', 'Ц', 'В', 'Б', 'Н', 'М']
-                        ].map((row, i) => (
-                            <div key={i} className="flex justify-center gap-1">
-                                {row.map(key => (
-                                    <Button
-                                        key={key}
-                                        onClick={() => {
-                                            if (selectedCell) {
-                                                handleCellInput(selectedCell[0], selectedCell[1], key);
-                                            }
-                                        }}
-                                        className="w-10 h-10"
-                                        variant="outline"
-                                    >
-                                        {key}
-                                    </Button>
-                                ))}
-                            </div>
-                        ))}
+                                                                if (!grid[rowIndex][colIndex].value) {
+                                                                    const words = findWordsForCell(colIndex, rowIndex);
+                                                                    const currentWord = words.find(word => word.direction === activeDirection);
+
+                                                                    if (currentWord) {
+                                                                        const currentCellIndex = currentWord.cells.findIndex(
+                                                                            cell => cell.x === colIndex && cell.y === rowIndex
+                                                                        );
+
+                                                                        if (currentCellIndex > 0) {
+                                                                            const prevCell = currentWord.cells[currentCellIndex - 1];
+                                                                            selectCell(prevCell.y, prevCell.x);
+                                                                        }
+                                                                    }
+                                                                }
+                                                            } else {
+                                                                handleKeyDown(e, rowIndex, colIndex);
+                                                            }
+                                                        }}
+                                                        onChange={() => {
+                                                        }}
+                                                        onFocus={() => selectCell(rowIndex, colIndex)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            selectCell(rowIndex, colIndex, true);
+                                                        }}
+                                                    />
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ))}
+                        </div>
+
+                        <OnScreenKeyboard selectedCell={selectedCell} handleCellInput={handleCellInput}/>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div>)
     );
 };
 

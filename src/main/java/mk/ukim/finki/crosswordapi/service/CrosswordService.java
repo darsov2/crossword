@@ -4,4 +4,6 @@ import mk.ukim.finki.crosswordapi.model.Crossword;
 
 public interface CrosswordService {
     public Crossword getTodaysCrossword();
+
+    Crossword getTodaysCrosswordWithWordsFetched();
 }

@@ -17,8 +17,12 @@ public class CrosswordServiceImpl implements CrosswordService {
 
     @Override
     public Crossword getTodaysCrossword() {
-        return crosswordRepository.findByDateAssigned(LocalDate.now()).orElseThrow(() -> {
-            throw new RuntimeException("Crossword for date " + LocalDate.now() + " not found!");
-        });
+        return crosswordRepository.findByDateAssigned(LocalDate.now()).orElseThrow(() -> new RuntimeException("Crossword for date " + LocalDate.now() + " not found!"));
     }
+
+    @Override
+    public Crossword getTodaysCrosswordWithWordsFetched() {
+        return crosswordRepository.findByDateAssignedAndWordCountGreaterThan(LocalDate.now(), 0).orElseThrow(() -> new RuntimeException("Crossword for date " + LocalDate.now() + " not found!"));
+    }
+
 }

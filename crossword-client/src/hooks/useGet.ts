@@ -1,34 +1,49 @@
-import {useState, useEffect} from 'react';
-import axios from "@/axios.ts";
-import {TodaysCrosswordResponse} from "@/interface/todays-crossword-response.ts";
+import { useState, useEffect } from 'react';
+import axios, { AxiosError, AxiosResponse } from '@/axios.ts';
 
-const useGet = (url: string) => {
+const useGet = <T>(url: string, defaultValue: T | null = null) => {
+    const [data, setData] = useState<T | null>(defaultValue);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
-    const [data, setData] = useState((null as TodaysCrosswordResponse));
-    const [isLoading, setIsLoading] = useState(true);
     const getData = async (url: string) => {
-        await axios.get(url, {maxRedirects: 0}).then((res) => {
-            setData(res.data);
-        }).catch((error) => {
-            console.log(error)
-        })
-            .finally(() => {
-                setIsLoading(false);
-            });
+        try {
+            setIsLoading(true);
+            setError(null);
+            const response: AxiosResponse<T> = await axios.get(url, { maxRedirects: 0 });
+            setData(response.data);
+        } catch (err) {
+            const axiosError = err as AxiosError;
+            setError(axiosError.message || 'An error occurred');
+            console.error(axiosError);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     useEffect(() => {
-        setIsLoading(true);
-        getData(url);
+        const controller = new AbortController();
+        const fetchData = async () => {
+            try {
+                await getData(url);
+            } catch {
+                setError('Fetch was cancelled.');
+            }
+        };
+        fetchData();
+
+        return () => {
+            controller.abort();
+        };
     }, [url]);
 
     return {
         data,
         setData,
         isLoading,
-        getData
+        error,
+        getData,
     };
 };
-
 
 export default useGet;
