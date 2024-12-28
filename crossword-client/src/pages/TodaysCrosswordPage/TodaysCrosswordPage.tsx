@@ -34,17 +34,9 @@ const ArrowWordPuzzle = () => {
         if (!isLoading) {
             if (data != null) {
                 console.log(data)
-                setPuzzleData(() => {
-                    console.log(data);
-                    return data.wordPlacements;
-                });
+                setPuzzleData(data.wordPlacements);
                 inputRefs.current = Array(data?.height || 8).fill(null)
                     .map(() => Array(data?.width || 8).fill(null));
-
-                console.log("SET GRID", Array(data.height).fill().map(() => Array(data.width).fill({
-                    value: '',
-                    isClue: false
-                })))
 
                 setGrid(Array(data.height).fill().map(() => Array(data.width).fill({
                     value: '',
