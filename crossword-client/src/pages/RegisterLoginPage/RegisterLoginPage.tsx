@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { User, Mail, Lock } from "lucide-react";
 import usePost from '@/hooks/usePost';
+import {UserResponse} from "@/interface/user-response.ts";
 
 const AuthPage = () => {
     const navigate = useNavigate();
@@ -68,8 +69,8 @@ const AuthPage = () => {
         return Object.keys(errors).length === 0;
     };
 
-    const registerHook = usePost();
-    const loginHook = usePost();
+    const registerHook = usePost<UserResponse>();
+    const loginHook = usePost<UserResponse>();
 
     const handleRegister = async (e) => {
         e.preventDefault();

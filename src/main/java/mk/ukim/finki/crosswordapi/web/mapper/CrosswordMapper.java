@@ -38,6 +38,7 @@ public class CrosswordMapper {
                         word.getYPosition(),
                         word.getWord().getDefinition(),
                         word.getExtensionDirection() == ExtensionDirection.HORIZONTAL ? "right" : "down",
+                        word.getId(),
                         mapWordToPositionsList(word)
                 )).toList();
         return new CrosswordGridResponse(

@@ -11,12 +11,14 @@ public class CrosswordWordPlacementResponse {
     String clue;
     String direction;
     List<PositionResponse> cells;
+    Long id;
 
-    public CrosswordWordPlacementResponse(Integer x, Integer y, String clue, String direction, List<PositionResponse> cells) {
+    public CrosswordWordPlacementResponse(Integer x, Integer y, String clue, String direction, Long id, List<PositionResponse> cells) {
         this.x = x;
         this.y = y;
         this.clue = clue;
         this.direction = direction;
         this.cells = cells;
+        this.id = id;
     }
 }

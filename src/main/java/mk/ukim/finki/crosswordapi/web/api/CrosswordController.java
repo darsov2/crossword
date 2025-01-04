@@ -1,12 +1,12 @@
 package mk.ukim.finki.crosswordapi.web.api;
 
 import mk.ukim.finki.crosswordapi.web.mapper.CrosswordMapper;
+import mk.ukim.finki.crosswordapi.web.request.CrosswordGridSubmission;
 import mk.ukim.finki.crosswordapi.web.response.CrosswordGridResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/crossword")
@@ -23,8 +23,13 @@ public class CrosswordController {
         return ResponseEntity.ok(crosswordMapper.getTodaysCrossword());
     }
 
-    @GetMapping(value = "/todays/grid", produces = "application/json")
+    @GetMapping("/todays/grid")
     public ResponseEntity<?> getTodaysCrosswordGrid() {
         return ResponseEntity.ok(crosswordMapper.getTodaysCrosswordGrid());
+    }
+
+    @PostMapping("/submit")
+    public ResponseEntity<?> submitCrosswordSolution(@RequestBody List<CrosswordGridSubmission> answers) {
+
     }
 }

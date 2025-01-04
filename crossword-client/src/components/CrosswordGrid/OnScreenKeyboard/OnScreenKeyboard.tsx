@@ -1,5 +1,5 @@
-import {Button} from "@/components/ui/button.tsx";
 import React from "react";
+import KeyboardKey from "@/components/CrosswordGrid/OnScreenKeyboard/KeyboardKey.tsx";
 
 const OnScreenKeyboard = ({selectedCell, handleCellInput}) => {
 
@@ -13,18 +13,7 @@ const OnScreenKeyboard = ({selectedCell, handleCellInput}) => {
         {macedonianAlphabet.map((row, i) => (
             <div key={i} className="flex justify-center gap-1">
                 {row.map(key => (
-                    <Button
-                        key={key}
-                        onClick={() => {
-                            if (selectedCell) {
-                                handleCellInput(selectedCell[0], selectedCell[1], key);
-                            }
-                        }}
-                        className="w-10 h-10"
-                        variant="outline"
-                    >
-                        {key}
-                    </Button>
+                    <KeyboardKey key={key} keyCode={key} selectedCell={selectedCell} handleCellInput={handleCellInput}/>
                 ))}
             </div>
         ))}

@@ -3,10 +3,16 @@ import {Button} from '@/components/ui/button';
 import {Card} from '@/components/ui/card';
 import ClueDisplay from "@/components/CrosswordGrid/ClueDisplay.tsx";
 import SplitClueCell from "@/components/CrosswordGrid/SplitClueCell.tsx";
-import OnScreenKeyboard from "@/components/CrosswordGrid/OnScreenKeyboard.tsx";
+import OnScreenKeyboard from "@/components/CrosswordGrid/OnScreenKeyboard/OnScreenKeyboard.tsx";
 import SingleClueCell from "@/components/CrosswordGrid/SingleClueCell.tsx";
 import useGet from "@/hooks/useGet.ts";
 import {CrosswordGridResponse} from "@/interface/crossword-grid-response.interface.ts";
+import {CrosswordWordPlacementResponse} from "@/interface/crossword-word-placement-response.interface.ts";
+import ConfirmSubmissionDialog, {
+    DialogProps
+} from "@/components/CrosswordGrid/ConfirmSubmissionDialog/ConfirmSubmissionDialog.tsx";
+import useToggle from "@/hooks/useToggle.ts";
+import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog.tsx";
 
 const ArrowWordPuzzle = () => {
     const [selectedCell, setSelectedCell] = useState(null);
@@ -14,7 +20,10 @@ const ArrowWordPuzzle = () => {
     const [activeClue, setActiveClue] = useState(null);
     const [lastClickedCell, setLastClickedCell] = useState(null);
     const {data, isLoading} = useGet<CrosswordGridResponse>('api/crossword/todays/grid');
-    const [puzzleData, setPuzzleData] = useState([]);
+    const [puzzleData, setPuzzleData] = useState([] as CrosswordWordPlacementResponse[]);
+    const answersReg = useRef(new Map());
+    const [dialogData, setDialogData] = useState({} as DialogProps);
+    const [showDialog, setShowDialog] = useState(false);
 
     const [grid, setGrid] = useState([]);
 
@@ -132,8 +141,51 @@ const ArrowWordPuzzle = () => {
         }
     };
 
+    const handleAnswerMap = (row, col, value) => {
+        const words = findWordsForCell(col, row)
+
+        words.forEach(word => {
+            console.log('zbor za mapa', word)
+            const wordId = word.id;
+            const wordLength = word.cells.length;
+
+            const answers = answersReg.current;
+
+            if (!answers.has(wordId)) {
+                answers.set(wordId, Array(wordLength).fill('_'));
+            }
+
+            const currentAnswer = answers.get(wordId);
+            const cellIndex = word.cells.findIndex(cell => cell.x === col && cell.y === row);
+
+            if (cellIndex !== -1) {
+                currentAnswer[cellIndex] = value;
+                answers.set(wordId, currentAnswer);
+                console.log(answers);
+            }
+        });
+    }
+
+    const handleAnswerDelete = (row, col) => {
+        const words = findWordsForCell(col, row);
+        words.forEach(word => {
+            const wordId = word.id;
+            const answers = answersReg.current;
+            const currentAnswer = answers.get(wordId);
+            const cellIndex = word.cells.findIndex(cell => cell.x === col && cell.y === row);
+
+            if (cellIndex !== -1 && currentAnswer) {
+                currentAnswer[cellIndex] = '_';
+                answers.set(wordId, currentAnswer);
+                console.log(currentAnswer);
+            }
+        })
+    }
+
     const handleCellInput = (row, col, value) => {
         if (value.length > 1) return;
+
+        handleAnswerMap(row, col, value);
 
         const newGrid = [...grid];
         newGrid[row][col] = {...newGrid[row][col], value: value.toUpperCase()};
@@ -225,44 +277,87 @@ const ArrowWordPuzzle = () => {
         }
     };
 
+    const openDialog = (dialogData: DialogProps) => {
+        console.log('open dialog')
+        setDialogData(dialogData)
+        setShowDialog(true);
+    }
+
+    const submitAnswers = () => {
+        const sanitizedAnswers = Array.from(answersReg.current.entries()).map(([wordId, answer]) => ({
+            wordId,
+            answer: answer.join('')
+        }));
+
+
+    }
+
+    const handleSubmit = () => {
+        const answers = answersReg.current;
+        const hasIncompleteWords = Array.from(answers.values()).some(value => value.includes('_'));
+
+        console.log(answers.size, data?.wordPlacements.length, hasIncompleteWords)
+
+        if (answers.size != data?.wordPlacements.length || !hasIncompleteWords) {
+            openDialog({
+                title: 'Непотполно решение',
+                message: 'Крстозборот не е целосно пополнет. Дали сте сигурни дека сакате да завршите со решавање и да го поднесете решението?',
+                handleDialogResult: (x) => {
+                    console.log('dialog result', x)
+                },
+                onOpenChange: setShowDialog
+            })
+        } else {
+            openDialog({
+                title: 'Поднесување на решението',
+                message: 'Со оваа акција нема да може да правите понтамошни промени на решението. Дали сте сигурни дека сакате да завршите со решавање и да го поднесете решението?',
+                handleDialogResult: (boolean) => {
+                    console.log('dialog result')
+                },
+                onOpenChange: setShowDialog
+            })
+        }
+    }
+
     return (!isLoading && data != null && grid.length != 0 && (
-            <div className="flex flex-col items-center justify-center min-h-screen p-4">
-                <div className="w-auto mx-auto space-y-4">
-                    <div className="flex justify-center">
-                        <h1 className="text-2xl font-bold">Денешен крстозбор</h1>
-                    </div>
+            <>
+                <div className="flex flex-col items-center justify-center min-h-screen p-4">
+                    <div className="w-auto mx-auto space-y-4">
+                        <div className="flex justify-center">
+                            <h1 className="text-2xl font-bold">Денешен крстозбор</h1>
+                        </div>
 
-                    <Card className="p-4 text-center min-h-[60px] flex items-center justify-center mb-4">
-                        <ClueDisplay activeClue={activeClue}></ClueDisplay>
-                    </Card>
+                        <Card className="p-4 text-center min-h-[60px] flex items-center justify-center mb-4">
+                            <ClueDisplay activeClue={activeClue}></ClueDisplay>
+                        </Card>
 
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="inline-block border border-gray-300">
-                            {Array(data?.height).fill(null).map((_, rowIndex) => (
-                                <div key={rowIndex} className="flex">
-                                    {Array(data?.width).fill(null).map((_, colIndex) => {
-                                        const {rightClue, downClue} = findCluesForCell(colIndex, rowIndex);
-                                        const hasIntersectingClues = rightClue && downClue;
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="inline-block border border-gray-300">
+                                {Array(data?.height).fill(0).map((_, rowIndex) => (
+                                    <div key={rowIndex} className="flex">
+                                        {Array(data?.width).fill(0).map((_, colIndex) => {
+                                            const {rightClue, downClue} = findCluesForCell(colIndex, rowIndex);
+                                            const hasIntersectingClues = rightClue && downClue;
 
-                                        const isSelected = selectedCell &&
-                                            selectedCell[0] === rowIndex &&
-                                            selectedCell[1] === colIndex;
+                                            const isSelected = selectedCell &&
+                                                selectedCell[0] === rowIndex &&
+                                                selectedCell[1] === colIndex;
 
-                                        const isPartOfWord = puzzleData.some(word =>
-                                            word.cells.some(cell => cell.x === colIndex && cell.y === rowIndex) ||
-                                            (word.x === colIndex && word.y === rowIndex)
-                                        );
+                                            const isPartOfWord = puzzleData.some(word =>
+                                                word.cells.some(cell => cell.x === colIndex && cell.y === rowIndex) ||
+                                                (word.x === colIndex && word.y === rowIndex)
+                                            );
 
-                                        const isLastOfWord = puzzleData.find(word => {
-                                            const lastChar = word.cells[word.cells.length - 1];
-                                            return lastChar.x == colIndex && lastChar.y == rowIndex;
-                                        })
+                                            const isLastOfWord = puzzleData.find(word => {
+                                                const lastChar = word.cells[word.cells.length - 1];
+                                                return lastChar.x == colIndex && lastChar.y == rowIndex;
+                                            })
 
 
-                                        return (
-                                            <div
-                                                key={`${rowIndex}-${colIndex}`}
-                                                className={`
+                                            return (
+                                                <div
+                                                    key={`${rowIndex}-${colIndex}`}
+                                                    className={`
                                               w-14 h-14 border border-gray-300
                                               flex flex-col items-center justify-center
                                               relative overflow-hidden
@@ -270,89 +365,98 @@ const ArrowWordPuzzle = () => {
                                               ${isSelected ? 'border-2 border-blue-500' : ''}
                                               ${!isPartOfWord ? 'bg-gray-80' : ''}
                                             `}
-                                                onClick={() => {
-                                                    if (isPartOfWord && !rightClue && !downClue) {
-                                                        selectCell(rowIndex, colIndex, true);
-                                                    }
-                                                }}
-                                            >
-                                                {hasIntersectingClues ? (
-                                                    <SplitClueCell rightClue={rightClue} downClue={downClue}
-                                                                   handleClueClick={handleClueClick}/>
-                                                ) : rightClue || downClue ? (
-                                                    <SingleClueCell clue={rightClue || downClue}
-                                                                    handleClueClick={handleClueClick}/>
-                                                ) : (
-                                                    <input
-                                                        ref={el => {
-                                                            inputRefs.current[rowIndex][colIndex] = {
-                                                                current: el
-                                                            };
-                                                        }}
-                                                        disabled={rowIndex == 0 && colIndex == 0}
-                                                        type="text"
-                                                        maxLength="1"
-                                                        className="w-full h-full text-center text-xl font-bold bg-transparent outline-none cursor-pointer caret-transparent"
-                                                        value={grid[rowIndex][colIndex].value}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key.length === 1) {
-                                                                e.preventDefault();
-                                                                if (/[А-ШЃЖЅЈЉЊЌЏа-шѓжѕјљњќџ]/.test(e.key)) {
-                                                                    handleCellInput(rowIndex, colIndex, e.key.toUpperCase());
-                                                                } else if (/[a-zA-Z\[\]\\;']/.test(e.key)) {
-                                                                    const macedonianLetter = englishToMacedonian[e.key.toLowerCase()];
-                                                                    if (macedonianLetter) {
-                                                                        handleCellInput(rowIndex, colIndex, macedonianLetter);
-                                                                    }
-                                                                }
-                                                            } else if (e.key === 'Backspace') {
-                                                                e.preventDefault();
-                                                                const newGrid = [...grid];
-                                                                newGrid[rowIndex][colIndex] = {
-                                                                    ...newGrid[rowIndex][colIndex],
-                                                                    value: ''
+                                                    onClick={() => {
+                                                        if (isPartOfWord && !rightClue && !downClue) {
+                                                            selectCell(rowIndex, colIndex, true);
+                                                        }
+                                                    }}
+                                                >
+                                                    {hasIntersectingClues ? (
+                                                        <SplitClueCell rightClue={rightClue} downClue={downClue}
+                                                                       handleClueClick={handleClueClick}/>
+                                                    ) : rightClue || downClue ? (
+                                                        <SingleClueCell clue={rightClue || downClue}
+                                                                        handleClueClick={handleClueClick}/>
+                                                    ) : (
+                                                        <input
+                                                            ref={el => {
+                                                                inputRefs.current[rowIndex][colIndex] = {
+                                                                    current: el
                                                                 };
-                                                                setGrid(newGrid);
-
-                                                                if (!grid[rowIndex][colIndex].value) {
-                                                                    const words = findWordsForCell(colIndex, rowIndex);
-                                                                    const currentWord = words.find(word => word.direction === activeDirection);
-
-                                                                    if (currentWord) {
-                                                                        const currentCellIndex = currentWord.cells.findIndex(
-                                                                            cell => cell.x === colIndex && cell.y === rowIndex
-                                                                        );
-
-                                                                        if (currentCellIndex > 0) {
-                                                                            const prevCell = currentWord.cells[currentCellIndex - 1];
-                                                                            selectCell(prevCell.y, prevCell.x);
+                                                            }}
+                                                            disabled={rowIndex == 0 && colIndex == 0}
+                                                            type="text"
+                                                            maxLength="1"
+                                                            className="w-full h-full text-center text-xl font-bold bg-transparent outline-none cursor-pointer caret-transparent"
+                                                            value={grid[rowIndex][colIndex].value}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key.length === 1) {
+                                                                    e.preventDefault();
+                                                                    if (/[А-ШЃЖЅЈЉЊЌЏа-шѓжѕјљњќџ]/.test(e.key)) {
+                                                                        handleCellInput(rowIndex, colIndex, e.key.toUpperCase());
+                                                                    } else if (/[a-zA-Z\[\]\\;']/.test(e.key)) {
+                                                                        const macedonianLetter = englishToMacedonian[e.key.toLowerCase()];
+                                                                        if (macedonianLetter) {
+                                                                            handleCellInput(rowIndex, colIndex, macedonianLetter);
                                                                         }
                                                                     }
-                                                                }
-                                                            } else {
-                                                                handleKeyDown(e, rowIndex, colIndex);
-                                                            }
-                                                        }}
-                                                        onChange={() => {
-                                                        }}
-                                                        onFocus={() => selectCell(rowIndex, colIndex)}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            selectCell(rowIndex, colIndex, true);
-                                                        }}
-                                                    />
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            ))}
-                        </div>
+                                                                } else if (e.key === 'Backspace') {
+                                                                    e.preventDefault();
+                                                                    console.log('vackspace')
+                                                                    handleAnswerDelete(rowIndex, colIndex)
+                                                                    const newGrid = [...grid];
+                                                                    newGrid[rowIndex][colIndex] = {
+                                                                        ...newGrid[rowIndex][colIndex],
+                                                                        value: ''
+                                                                    };
+                                                                    setGrid(newGrid);
 
-                        <OnScreenKeyboard selectedCell={selectedCell} handleCellInput={handleCellInput}/>
+                                                                    if (!grid[rowIndex][colIndex].value) {
+                                                                        const words = findWordsForCell(colIndex, rowIndex);
+                                                                        const currentWord = words.find(word => word.direction === activeDirection);
+
+                                                                        if (currentWord) {
+                                                                            const currentCellIndex = currentWord.cells.findIndex(
+                                                                                cell => cell.x === colIndex && cell.y === rowIndex
+                                                                            );
+
+                                                                            if (currentCellIndex > 0) {
+                                                                                const prevCell = currentWord.cells[currentCellIndex - 1];
+                                                                                selectCell(prevCell.y, prevCell.x);
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                } else {
+                                                                    handleKeyDown(e, rowIndex, colIndex);
+                                                                }
+                                                            }}
+                                                            onChange={() => {
+                                                            }}
+                                                            onFocus={() => selectCell(rowIndex, colIndex)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                selectCell(rowIndex, colIndex, true);
+                                                            }}
+                                                        />
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ))}
+                            </div>
+                            <Button
+                                onClick={handleSubmit}
+                                className="mt-4 bg-gray-600 hover:bg-gray-700 text-white"
+                            >
+                                Поднеси решение
+                            </Button>
+                            <OnScreenKeyboard selectedCell={selectedCell} handleCellInput={handleCellInput}/>
+                        </div>
                     </div>
                 </div>
-            </div>)
+                {showDialog && <ConfirmSubmissionDialog {...dialogData}/>}
+            </>)
     );
 };
 
