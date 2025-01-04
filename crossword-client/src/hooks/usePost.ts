@@ -2,11 +2,11 @@ import { useState } from 'react';
 import axios from "@/axios.ts";
 import { UserResponse } from "@/interface/user-response.ts";
 
-const usePost = () => {
-    const [data, setData] = useState<UserResponse | null>(null);
+const usePost = <T>() => {
+    const [data, setData] = useState<T | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    const createEntity = async (url: string, entity: any): Promise<UserResponse | null> => {
+    const createEntity = async (url: string, entity: any): Promise<T | null> => {
         try {
             setIsLoading(true);
             const response = await axios.post(url, entity);
