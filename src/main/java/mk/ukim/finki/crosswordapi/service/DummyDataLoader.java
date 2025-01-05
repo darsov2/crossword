@@ -186,7 +186,7 @@ public class DummyDataLoader {
 
 
         Word word20 = new Word();
-        word20.setWord("ТОА");
+        word20.setWord("ТОН");
         word20.setDefinition("Мерка за маса и тежина");
         word20.setLength(3);
         word20.setRarity(Rarity.COMMON);
