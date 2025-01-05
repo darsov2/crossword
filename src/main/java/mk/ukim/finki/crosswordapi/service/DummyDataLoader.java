@@ -36,14 +36,6 @@ public class DummyDataLoader {
     @PostConstruct
     public void init() {
         if (crosswordRepository.findByDateAssigned(LocalDate.now()).isEmpty()) {
-//            Crossword crossword1 = new Crossword();
-//            crossword1.setDateAssigned(LocalDate.now());
-//            crossword1.setDifficulty(Difficulty.MEDIUM);
-//            crossword1.setWidth(50);
-//            crossword1.setHeight(50);
-//            crossword1.setWordCount(100);
-//            crosswordRepository.save(crossword1);
-//            logger.info("Inserted Crossword for date {}", crossword1.getDateAssigned());
             addCrossword();
         }
     }
@@ -551,9 +543,9 @@ public class DummyDataLoader {
 
 
         Word word71 = new Word();
-        word71.setWord("КАРАТИ");
+        word71.setWord("КАРАТ");
         word71.setDefinition("Мера за чистота на златото");
-        word71.setLength(6);
+        word71.setLength(5);
         word71.setRarity(Rarity.COMMON);
 
 
@@ -708,7 +700,7 @@ public class DummyDataLoader {
                 {0, 10, ExtensionDirection.VERTICAL},
                 {0, 11, ExtensionDirection.VERTICAL},
                 {0, 12, ExtensionDirection.VERTICAL},
-                {2, 13, ExtensionDirection.VERTICAL},
+                {0, 13, ExtensionDirection.VERTICAL},
                 {1, 0, ExtensionDirection.HORIZONTAL},
                 {1, 7, ExtensionDirection.HORIZONTAL},
                 {1, 7, ExtensionDirection.VERTICAL},
@@ -720,7 +712,6 @@ public class DummyDataLoader {
                 {3, 4, ExtensionDirection.HORIZONTAL},
                 {3, 8, ExtensionDirection.HORIZONTAL},
                 {3, 8, ExtensionDirection.VERTICAL},
-                {4, 0, ExtensionDirection.HORIZONTAL},
                 {4, 0, ExtensionDirection.HORIZONTAL},
                 {4, 4, ExtensionDirection.HORIZONTAL},
                 {4, 4, ExtensionDirection.VERTICAL},
@@ -749,7 +740,7 @@ public class DummyDataLoader {
                 {8, 12, ExtensionDirection.HORIZONTAL},
                 {8, 12, ExtensionDirection.VERTICAL},
                 {9, 0, ExtensionDirection.HORIZONTAL},
-                {9, 2, ExtensionDirection.HORIZONTAL},
+                {9, 2, ExtensionDirection.VERTICAL},
                 {9, 3, ExtensionDirection.HORIZONTAL},
                 {9, 3, ExtensionDirection.VERTICAL},
                 {9, 6, ExtensionDirection.HORIZONTAL},
@@ -757,7 +748,7 @@ public class DummyDataLoader {
                 {9, 10, ExtensionDirection.HORIZONTAL},
                 {9, 10, ExtensionDirection.VERTICAL},
                 {10, 0, ExtensionDirection.HORIZONTAL},
-                {10, 4, ExtensionDirection.HORIZONTAL},
+                {10, 4, ExtensionDirection.VERTICAL},
                 {10, 5, ExtensionDirection.HORIZONTAL},
                 {10, 5, ExtensionDirection.VERTICAL},
                 {10, 9, ExtensionDirection.HORIZONTAL},
@@ -769,7 +760,7 @@ public class DummyDataLoader {
                 {11, 11, ExtensionDirection.VERTICAL},
                 {12, 0, ExtensionDirection.HORIZONTAL},
                 {12, 7, ExtensionDirection.HORIZONTAL},
-                {12, 13, ExtensionDirection.HORIZONTAL},
+                {12, 13, ExtensionDirection.VERTICAL},
                 {13, 0, ExtensionDirection.HORIZONTAL},
                 {13, 2, ExtensionDirection.HORIZONTAL},
                 {13, 2, ExtensionDirection.VERTICAL},
@@ -778,7 +769,7 @@ public class DummyDataLoader {
                 {13, 12, ExtensionDirection.HORIZONTAL},
                 {13, 12, ExtensionDirection.VERTICAL},
                 {14, 0, ExtensionDirection.HORIZONTAL},
-                {14, 5, ExtensionDirection.HORIZONTAL},
+                {14, 5, ExtensionDirection.VERTICAL},
                 {14, 6, ExtensionDirection.HORIZONTAL},
                 {14, 6, ExtensionDirection.VERTICAL},
                 {15, 0, ExtensionDirection.HORIZONTAL},
