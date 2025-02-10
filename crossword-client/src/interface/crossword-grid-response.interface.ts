@@ -5,4 +5,7 @@ export interface CrosswordGridResponse {
     width: number;
     height: number;
     wordPlacements: CrosswordWordPlacementResponse[];
+    isFinished: boolean;
+    startedAt: Date;
+    finishedAt: Date;
 }
