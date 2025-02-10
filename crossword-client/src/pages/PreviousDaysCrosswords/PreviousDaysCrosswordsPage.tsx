@@ -6,10 +6,13 @@ import CrosswordPreviewSymbol
     from "@/components/PreviousDaysCrosswords/CrosswordPreviewSymbol/CrosswordPreviewSymbol.tsx";
 import CrosswordCard from "@/pages/PreviousDaysCrosswords/CrosswordCard/CrosswordCard.tsx";
 import {useNavigate} from "react-router-dom";
+import useGet from "@/hooks/useGet.ts";
+import {TodaysCrosswordResponse} from "@/interface/todays-crossword-response.ts";
 
 const PreviousDaysCrosswordsPage = () => {
 
     const navigate = useNavigate();
+    const { data, isLoading } = useGet<TodaysCrosswordResponse[]>('api/crossword/previous');
 
     const dummyCrosswords = [
         {
@@ -86,8 +89,8 @@ const PreviousDaysCrosswordsPage = () => {
                 </div>
 
                 <div className="grid gap-5 grid-cols-5">
-                    {filteredCrosswords.map((puzzle) => (
-                        <CrosswordCard key={puzzle.id} puzzle={puzzle} onNavigate={navigate}/>
+                    {!isLoading && data!.map((puzzle, i) => (
+                        <CrosswordCard key={i} puzzle={puzzle} onNavigate={navigate}/>
                     ))}
                 </div>
 

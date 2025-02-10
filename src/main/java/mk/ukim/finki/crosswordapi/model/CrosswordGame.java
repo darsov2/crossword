@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Entity
@@ -19,4 +21,6 @@ public class CrosswordGame {
     private CrosswordUser crosswordUser;
     @ManyToOne
     private Crossword crossword;
+    @OneToMany(mappedBy = "crosswordGame")
+    private List<GuessedWord> guessedWordsList = new ArrayList<>();
 }

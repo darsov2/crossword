@@ -13,13 +13,26 @@ import ConfirmSubmissionDialog, {
 } from "@/components/CrosswordGrid/ConfirmSubmissionDialog/ConfirmSubmissionDialog.tsx";
 import useToggle from "@/hooks/useToggle.ts";
 import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog.tsx";
+import {CrosswordGameSubmissionInterface} from "@/interface/crossword-game-submission.interface.ts";
+import usePost from "@/hooks/usePost.ts";
+import {CrosswordGridSubmission} from "@/interface/crossword-grid-submission.interface.ts";
+import TimeTracker from "@/components/CrosswordGrid/TimeTracker/TimeTracker.tsx";
+import {useParams} from "react-router";
 
 const ArrowWordPuzzle = () => {
+    const { id } = useParams();
+    const apiUrl = id ? `api/crossword/start/${id}` : `api/crossword/todays/grid`
+
     const [selectedCell, setSelectedCell] = useState(null);
     const [activeDirection, setActiveDirection] = useState('right');
     const [activeClue, setActiveClue] = useState(null);
     const [lastClickedCell, setLastClickedCell] = useState(null);
-    const {data, isLoading} = useGet<CrosswordGridResponse>('api/crossword/todays/grid');
+    const {
+        data: submitResponse,
+        isLoading: test,
+        createEntity: createEntity
+    } = usePost<CrosswordGameSubmissionInterface>();
+    const {data, isLoading, setData} = useGet<CrosswordGridResponse>(apiUrl);
     const [puzzleData, setPuzzleData] = useState([] as CrosswordWordPlacementResponse[]);
     const answersReg = useRef(new Map());
     const [dialogData, setDialogData] = useState({} as DialogProps);
@@ -42,7 +55,6 @@ const ArrowWordPuzzle = () => {
     useEffect(() => {
         if (!isLoading) {
             if (data != null) {
-                console.log(data)
                 setPuzzleData(data.wordPlacements);
                 inputRefs.current = Array(data?.height || 8).fill(null)
                     .map(() => Array(data?.width || 8).fill(null));
@@ -51,6 +63,20 @@ const ArrowWordPuzzle = () => {
                     value: '',
                     isClue: false
                 })))
+
+                data.wordPlacements.flatMap(x => x.cells).forEach(cell => {
+                    if (cell.guess !== ' ' && cell.guess != '_') {
+                        setGrid(prevGrid => {
+                            const newGrid = [...prevGrid];
+                            newGrid[cell.y] = [...newGrid[cell.y]];
+                            newGrid[cell.y][cell.x] = {
+                                value: cell.guess,
+                                isClue: false
+                            }
+                            return newGrid;
+                        });
+                    }
+                });
             }
         }
     }, [isLoading]);
@@ -145,7 +171,6 @@ const ArrowWordPuzzle = () => {
         const words = findWordsForCell(col, row)
 
         words.forEach(word => {
-            console.log('zbor za mapa', word)
             const wordId = word.id;
             const wordLength = word.cells.length;
 
@@ -161,7 +186,6 @@ const ArrowWordPuzzle = () => {
             if (cellIndex !== -1) {
                 currentAnswer[cellIndex] = value;
                 answers.set(wordId, currentAnswer);
-                console.log(answers);
             }
         });
     }
@@ -177,12 +201,13 @@ const ArrowWordPuzzle = () => {
             if (cellIndex !== -1 && currentAnswer) {
                 currentAnswer[cellIndex] = '_';
                 answers.set(wordId, currentAnswer);
-                console.log(currentAnswer);
             }
         })
     }
 
     const handleCellInput = (row, col, value) => {
+
+
         if (value.length > 1) return;
 
         handleAnswerMap(row, col, value);
@@ -278,7 +303,6 @@ const ArrowWordPuzzle = () => {
     };
 
     const openDialog = (dialogData: DialogProps) => {
-        console.log('open dialog')
         setDialogData(dialogData)
         setShowDialog(true);
     }
@@ -296,14 +320,32 @@ const ArrowWordPuzzle = () => {
         const answers = answersReg.current;
         const hasIncompleteWords = Array.from(answers.values()).some(value => value.includes('_'));
 
-        console.log(answers.size, data?.wordPlacements.length, hasIncompleteWords)
 
         if (answers.size != data?.wordPlacements.length || !hasIncompleteWords) {
             openDialog({
                 title: 'Непотполно решение',
                 message: 'Крстозборот не е целосно пополнет. Дали сте сигурни дека сакате да завршите со решавање и да го поднесете решението?',
-                handleDialogResult: (x) => {
-                    console.log('dialog result', x)
+                handleDialogResult: async (x) => {
+                    if (x) {
+                        const answersObj = Object.fromEntries(answers)
+                        const answersResponse = Object.entries(answersObj).map(([k, v]) => {
+                            const res: CrosswordGridSubmission = {
+                                answer: (v as string[]).join(''),
+                                wordInCrosswordId: k as number
+                            }
+                            return res;
+                        })
+
+                        const gameSubmission: CrosswordGameSubmissionInterface = {
+                            answers: answersResponse,
+                            crosswordGameId: data!.crosswordGameId
+                        }
+
+                        const response = await createEntity('/api/crossword/submit', gameSubmission);
+
+                        console.log(response);
+                        window.location.reload();
+                    }
                 },
                 onOpenChange: setShowDialog
             })
@@ -328,6 +370,14 @@ const ArrowWordPuzzle = () => {
                         </div>
 
                         <Card className="p-4 text-center min-h-[60px] flex items-center justify-center mb-4">
+                            <TimeTracker
+                                isSubmitted={data?.isFinished}
+                                startTime={data?.startedAt}
+                                endTime={data?.finishedAt}
+                            />
+                        </Card>
+
+                        <Card className="p-4 text-center min-h-[60px] flex items-center justify-center mb-4">
                             <ClueDisplay activeClue={activeClue}></ClueDisplay>
                         </Card>
 
@@ -348,28 +398,37 @@ const ArrowWordPuzzle = () => {
                                                 (word.x === colIndex && word.y === rowIndex)
                                             );
 
+                                            const isCorrect = puzzleData.some(word =>
+                                                word.cells.some(cell => cell.x === colIndex && cell.y === rowIndex && cell.correct)
+                                            );
+
+                                            console.log('is correct', isCorrect)
+
                                             const isLastOfWord = puzzleData.find(word => {
                                                 const lastChar = word.cells[word.cells.length - 1];
                                                 return lastChar.x == colIndex && lastChar.y == rowIndex;
                                             })
 
+                                            const isDummy = puzzleData.flatMap(x => x.cells).some(cell => cell.x === colIndex && cell.y === rowIndex)
+
 
                                             return (
                                                 <div
                                                     key={`${rowIndex}-${colIndex}`}
-                                                    className={`
-                                              w-14 h-14 border border-gray-300
-                                              flex flex-col items-center justify-center
-                                              relative overflow-hidden
-                                              ${rightClue || downClue ? 'bg-gray-100' : 'bg-white'}
-                                              ${isSelected ? 'border-2 border-blue-500' : ''}
-                                              ${!isPartOfWord ? 'bg-gray-80' : ''}
-                                            `}
                                                     onClick={() => {
                                                         if (isPartOfWord && !rightClue && !downClue) {
                                                             selectCell(rowIndex, colIndex, true);
                                                         }
                                                     }}
+                                                    className={`
+                                              w-14 h-14 border border-gray-200
+                                              flex flex-col items-center justify-center
+                                              relative overflow-hidden rounded-md
+                                              shadow-sm transition-transform transform hover:scale-105 hover:shadow-md
+                                              ${(rightClue || downClue) ? 'bg-gray-50' : !isPartOfWord ? 'bg-gray-50' : 'bg-white'}                                              
+                                              ${isSelected && !data.isFinished ? 'border-4 border-blue-400' : ''}
+                                              ${!(rightClue || downClue) && isCorrect && isPartOfWord ? 'bg-green-300 bg-opacity-20' : ''}
+                                            `}
                                                 >
                                                     {hasIntersectingClues ? (
                                                         <SplitClueCell rightClue={rightClue} downClue={downClue}
@@ -384,7 +443,7 @@ const ArrowWordPuzzle = () => {
                                                                     current: el
                                                                 };
                                                             }}
-                                                            disabled={rowIndex == 0 && colIndex == 0}
+                                                            disabled={!isPartOfWord || data.isFinished}
                                                             type="text"
                                                             maxLength="1"
                                                             className="w-full h-full text-center text-xl font-bold bg-transparent outline-none cursor-pointer caret-transparent"
@@ -402,7 +461,6 @@ const ArrowWordPuzzle = () => {
                                                                     }
                                                                 } else if (e.key === 'Backspace') {
                                                                     e.preventDefault();
-                                                                    console.log('vackspace')
                                                                     handleAnswerDelete(rowIndex, colIndex)
                                                                     const newGrid = [...grid];
                                                                     newGrid[rowIndex][colIndex] = {
@@ -445,13 +503,17 @@ const ArrowWordPuzzle = () => {
                                     </div>
                                 ))}
                             </div>
-                            <Button
-                                onClick={handleSubmit}
-                                className="mt-4 bg-gray-600 hover:bg-gray-700 text-white"
-                            >
-                                Поднеси решение
-                            </Button>
-                            <OnScreenKeyboard selectedCell={selectedCell} handleCellInput={handleCellInput}/>
+                            {
+                            !data.isFinished && <>
+                                <Button
+                                    onClick={handleSubmit}
+                                    className="mt-4 bg-gray-600 hover:bg-gray-700 text-white"
+                                >
+                                    Поднеси решение
+                                </Button>
+                                <OnScreenKeyboard selectedCell={selectedCell} handleCellInput={handleCellInput}/>
+                            </>
+                            }
                         </div>
                     </div>
                 </div>

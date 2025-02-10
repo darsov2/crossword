@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 public interface CrosswordRepository extends JpaRepository<Crossword, Long> {
@@ -12,4 +13,5 @@ public interface CrosswordRepository extends JpaRepository<Crossword, Long> {
 
     @EntityGraph(value = "crosswordWithWords" , type= EntityGraph.EntityGraphType.FETCH)
     Optional<Crossword> findByDateAssignedAndWordCountGreaterThan(LocalDate dateAssigned, Integer wordCount);
+    List<Crossword> findAllByDateAssignedBefore(LocalDate dateAssigned);
 }

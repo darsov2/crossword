@@ -25,6 +25,14 @@ public class CrosswordUserMapper {
         return toResponse(service.register(crosswordUser));
     }
 
+    public UserResponse status() {
+        CrosswordUser crosswordUser = service.currentUser();
+        if(crosswordUser == null) {
+            return null;
+        }
+        return toResponse(service.currentUser());
+    }
+
     public static UserResponse toResponse(CrosswordUser crosswordUser) {
         UserResponse userResponse = new UserResponse();
         userResponse.setUsername(crosswordUser.getUsername());

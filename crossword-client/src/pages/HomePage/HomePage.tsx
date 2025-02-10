@@ -3,15 +3,10 @@ import {Card, CardContent} from '@/components/ui/card';
 import {Button} from '@/components/ui/button';
 import useGet from "@/hooks/useGet.ts";
 import {useNavigate} from "react-router-dom";
+import {useAuth} from "@/components/AuthProvider.tsx";
 
 const HomePage = () => {
-    // This would typically come from your backend
-    const todaysPuzzle = {
-        difficulty: "Medium",
-        gridSize: "15x15",
-        theme: "World Capitals"
-    };
-
+    const {user, logout} = useAuth(); // Get user from useAuth
     const {data, isLoading} = useGet('api/crossword/todays');
     const navigate = useNavigate();
 
@@ -25,6 +20,11 @@ const HomePage = () => {
                 </div>
                 {!isLoading && (<Card className="bg-white shadow-lg">
                     <CardContent className="pt-6">
+                        {user && (
+                            <div className="mb-4 text-gray-700 text-center">
+                                Здраво, {user.firstName}!
+                            </div>
+                        )}
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center">
                                 <Calendar className="h-5 w-5 text-blue-500 mr-2"/>
@@ -38,21 +38,33 @@ const HomePage = () => {
 
                         {/* Action Buttons */}
                         <div className="space-y-3">
-                            <Button
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center"
-                                onClick={() => navigate("/login")}
-                            >
-                                <UserCircle2 className="mr-2 h-5 w-5"/>
-                                Играј најавен
-                            </Button>
+                            {!user ? (
+                                <Button
+                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center"
+                                    onClick={() => navigate("/login")}
+                                >
+                                    <UserCircle2 className="mr-2 h-5 w-5"/>
+                                    Играј најавен
+                                </Button>
+                            ) : (
+                                <Button
+                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center"
+                                    onClick={() => navigate("/crossword")}
+                                >
+                                    <UserCircle2 className="mr-2 h-5 w-5"/>
+                                    Започни со игра
+                                </Button>
+                            )}
 
-                            <Button
-                                className="w-full bg-gray-600 hover:bg-gray-700 text-white flex items-center justify-center"
-                                onClick={() => navigate("/todays")}
-                            >
-                                <User className="mr-2 h-5 w-5"/>
-                                Играј како гостин
-                            </Button>
+                            {!user && (
+                                <Button
+                                    className="w-full bg-gray-600 hover:bg-gray-700 text-white flex items-center justify-center"
+                                    onClick={() => navigate("/crossword")}
+                                >
+                                    <User className="mr-2 h-5 w-5"/>
+                                    Играј како гостин
+                                </Button>
+                            )}
 
                             <Button
                                 variant="outline"
@@ -62,11 +74,21 @@ const HomePage = () => {
                                 <History className="mr-2 h-5 w-5"/>
                                 Крстозбори од претходни денови
                             </Button>
+
+                            {user && (
+                                <Button
+                                    variant="destructive"
+                                    className="w-full"
+                                    onClick={() => {
+                                        logout() && navigate("/");
+                                    }}
+                                >
+                                    Одјави се
+                                </Button>
+                            )}
                         </div>
                     </CardContent>
                 </Card>)}
-                {/* Today's Puzzle Card */}
-
 
                 {/* Footer Info */}
                 <p className="text-center text-sm text-gray-500">

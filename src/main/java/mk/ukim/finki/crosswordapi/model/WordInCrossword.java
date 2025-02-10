@@ -6,6 +6,12 @@ import mk.ukim.finki.crosswordapi.model.enums.ExtensionDirection;
 
 @Data
 @Entity
+@NamedEntityGraph(
+        name = "wordInCrosswordWithWord",
+        attributeNodes = {
+                @NamedAttributeNode(value = "word")
+        }
+)
 public class WordInCrossword {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

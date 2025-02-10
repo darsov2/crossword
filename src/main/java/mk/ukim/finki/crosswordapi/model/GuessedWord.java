@@ -10,7 +10,9 @@ public class GuessedWord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @ManyToOne
-    private Word word;
+    private WordInCrossword word;
     @ManyToOne
     private CrosswordGame crosswordGame;
+    String guess;
+    Boolean isCorrect;
 }

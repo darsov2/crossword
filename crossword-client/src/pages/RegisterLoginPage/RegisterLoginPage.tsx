@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
@@ -6,13 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { User, Mail, Lock } from "lucide-react";
+import {User, Mail, Lock, ArrowLeft} from "lucide-react";
 import usePost from '@/hooks/usePost';
 import {UserResponse} from "@/interface/user-response.ts";
+import {useAuth} from "@/components/AuthProvider.tsx";
 
 const AuthPage = () => {
     const navigate = useNavigate();
     const [formErrors, setFormErrors] = useState({});
+    const { login, register, error, user     } = useAuth();
     const [registrationForm, setRegistrationForm] = useState({
         username: '',
         password: '',
@@ -22,15 +24,15 @@ const AuthPage = () => {
     });
 
     const [loginForm, setLoginForm] = useState({
-        email: '',
+        username: '',
         password: ''
     });
 
-    // Form validation functions
-    const validateEmail = (email) => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    };
+    useEffect(() => {
+        if (user) {
+            navigate('/');
+        }
+    }, [user, navigate]);
 
     const validateName = (name) => {
         const nameRegex = /^[a-zA-Z\s-']+$/;
@@ -75,17 +77,14 @@ const AuthPage = () => {
     const handleRegister = async (e) => {
         e.preventDefault();
         if (validateRegistrationForm()) {
-            const response = await registerHook.createEntity('/api/auth/register', registrationForm);
-            if (response != null) {
-                navigate('/todays');
-            }
+            await register(registrationForm);
         }
     };
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        const response = await loginHook.createEntity('/api/auth/login', loginForm);
-        if (response != null) {
+        const res = await login(loginForm.username, loginForm.password)
+        if(res) {
             navigate('/todays');
         }
     };
@@ -97,18 +96,30 @@ const AuthPage = () => {
         } else {
             setLoginForm(prev => ({ ...prev, [name]: value }));
         }
-        // Clear error when user starts typing
         if (formErrors[name]) {
             setFormErrors(prev => ({ ...prev, [name]: '' }));
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="min-h-screen bg-gray-50 p-4">
+            <div className="max-w-5xl mx-auto">
+                <div className="mb-6">
+                    <Button
+                        variant="ghost"
+                        className="mb-4 text-gray-600 hover:text-gray-900"
+                        onClick={() => navigate('/')}
+                    >
+                        <ArrowLeft className="h-5 w-5 mr-2"/>
+                        Назад
+                    </Button>
+                </div>
+        <div className="bg-gray-50 flex flex-col items-center justify-center p-4">
             <div className="w-full max-w-md space-y-4">
                 <div className="text-center space-y-2">
                     <h1 className="text-3xl font-bold text-gray-900">Дневен крстозбор</h1>
-                    <p className="text-gray-500">Најавете се или регистрирајте се за да го следите вашиот напредок</p>
+                    <p className="text-gray-500">Најавете се или регистрирајте се за да го следите
+                        вашиот напредок</p>
                 </div>
 
                 <Card>
@@ -124,15 +135,16 @@ const AuthPage = () => {
                             <TabsContent value="login">
                                 <form onSubmit={handleLogin} className="space-y-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="login-email">Email</Label>
+                                        <Label htmlFor="login-email">Username</Label>
                                         <div className="relative">
-                                            <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                            <Mail
+                                                className="absolute left-3 top-3 h-4 w-4 text-gray-400"/>
                                             <Input
                                                 id="login-email"
-                                                name="email"
-                                                type="email"
+                                                name="username"
+                                                type="text"
                                                 className="pl-10"
-                                                value={loginForm.email}
+                                                value={loginForm.usename}
                                                 onChange={(e) => handleInputChange(e, 'login')}
                                                 required
                                             />
@@ -142,7 +154,8 @@ const AuthPage = () => {
                                     <div className="space-y-2">
                                         <Label htmlFor="login-password">Лозинка</Label>
                                         <div className="relative">
-                                            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                            <Lock
+                                                className="absolute left-3 top-3 h-4 w-4 text-gray-400"/>
                                             <Input
                                                 id="login-password"
                                                 name="password"
@@ -170,7 +183,8 @@ const AuthPage = () => {
                                     <div className="space-y-2">
                                         <Label htmlFor="username">Корисничко име</Label>
                                         <div className="relative">
-                                            <User className="absolute left-3 top-3 h-4 w-4 text-gray-400"/>
+                                            <User
+                                                className="absolute left-3 top-3 h-4 w-4 text-gray-400"/>
                                             <Input
                                                 id="username"
                                                 name="username"
@@ -224,55 +238,57 @@ const AuthPage = () => {
                                         </div>
                                     </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="register-email">Email</Label>
-                                            <div className="relative">
-                                                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400"/>
-                                                <Input
-                                                    id="register-email"
-                                                    name="email"
-                                                    type="email"
-                                                    className="pl-10"
-                                                    value={registrationForm.email}
-                                                    onChange={(e) => handleInputChange(e, 'register')}
-                                                    required
-                                                />
-                                            </div>
-                                            {formErrors.email && (
-                                                <Alert variant="destructive">
-                                                    <AlertDescription>{formErrors.email}</AlertDescription>
-                                                </Alert>
-                                            )}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="register-email">Email</Label>
+                                        <div className="relative">
+                                            <Mail
+                                                className="absolute left-3 top-3 h-4 w-4 text-gray-400"/>
+                                            <Input
+                                                id="register-email"
+                                                name="email"
+                                                type="email"
+                                                className="pl-10"
+                                                value={registrationForm.email}
+                                                onChange={(e) => handleInputChange(e, 'register')}
+                                                required
+                                            />
                                         </div>
+                                        {formErrors.email && (
+                                            <Alert variant="destructive">
+                                                <AlertDescription>{formErrors.email}</AlertDescription>
+                                            </Alert>
+                                        )}
+                                    </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="register-password">Лозинка</Label>
-                                            <div className="relative">
-                                                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400"/>
-                                                <Input
-                                                    id="register-password"
-                                                    name="password"
-                                                    type="password"
-                                                    className="pl-10"
-                                                    value={registrationForm.password}
-                                                    onChange={(e) => handleInputChange(e, 'register')}
-                                                    required
-                                                />
-                                            </div>
-                                            {formErrors.password && (
-                                                <Alert variant="destructive">
-                                                    <AlertDescription>{formErrors.password}</AlertDescription>
-                                                </Alert>
-                                            )}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="register-password">Лозинка</Label>
+                                        <div className="relative">
+                                            <Lock
+                                                className="absolute left-3 top-3 h-4 w-4 text-gray-400"/>
+                                            <Input
+                                                id="register-password"
+                                                name="password"
+                                                type="password"
+                                                className="pl-10"
+                                                value={registrationForm.password}
+                                                onChange={(e) => handleInputChange(e, 'register')}
+                                                required
+                                            />
                                         </div>
+                                        {formErrors.password && (
+                                            <Alert variant="destructive">
+                                                <AlertDescription>{formErrors.password}</AlertDescription>
+                                            </Alert>
+                                        )}
+                                    </div>
 
-                                        <Button
-                                            type="submit"
-                                            className="w-full"
-                                            disabled={registerHook.isLoading}
-                                        >
-                                            {registerHook.isLoading ? "Регистрирај се..." : "Регистрирај се"}
-                                        </Button>
+                                    <Button
+                                        type="submit"
+                                        className="w-full"
+                                        disabled={registerHook.isLoading}
+                                    >
+                                        {registerHook.isLoading ? "Регистрирај се..." : "Регистрирај се"}
+                                    </Button>
                                 </form>
                             </TabsContent>
                         </CardContent>
@@ -295,6 +311,8 @@ const AuthPage = () => {
                         </div>
                     </CardContent>
                 </Card>
+            </div>
+        </div>
             </div>
         </div>
     );
