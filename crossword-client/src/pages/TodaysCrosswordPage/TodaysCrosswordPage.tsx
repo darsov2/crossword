@@ -427,7 +427,7 @@ const ArrowWordPuzzle = () => {
                                               shadow-sm transition-transform transform hover:scale-105 hover:shadow-md
                                               ${(rightClue || downClue) ? 'bg-gray-50' : !isPartOfWord ? 'bg-gray-50' : 'bg-white'}                                              
                                               ${isSelected && !data.isFinished ? 'border-4 border-blue-400' : ''}
-                                              ${!(rightClue || downClue) && isCorrect && isPartOfWord ? 'bg-green-300 bg-opacity-20' : ''}
+                                              ${!(rightClue || downClue) && isCorrect && isPartOfWord ? 'bg-green-500 bg-opacity-20' : ''}
                                             `}
                                                 >
                                                     {hasIntersectingClues ? (
